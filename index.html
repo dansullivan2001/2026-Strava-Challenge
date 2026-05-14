@@ -253,59 +253,58 @@
       position: absolute;
       right: -10px;
       top: 50%;
-      transform: translateY(-50%);
+      transform: translateY(-50%) scaleX(-1);
       font-size: 18px;
       filter: drop-shadow(0 0 4px var(--orange));
+      display: inline-block;
     }
     .tracker-pct { font-size: 0.75rem; color: var(--muted); text-align: right; margin-top: 5px; }
-    .milestones {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      padding-left: 8px;
+    .milestones { margin-top: 8px; }
+    .snake-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
     }
-    .ms-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      position: relative;
-      padding: 7px 0;
+    .sn-node {
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
     }
-    .ms-item:not(:last-child)::before {
-      content: '';
-      position: absolute;
-      left: 10px;
-      top: 20px;
-      bottom: -7px;
-      width: 2px;
-      background: var(--border);
-      z-index: 0;
+    .sn-node.done {
+      border-color: rgba(252,76,2,0.45);
+      background: rgba(252,76,2,0.07);
     }
-    .ms-item.done:not(:last-child)::before { background: var(--orange); }
-    .ms-dot {
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      background: var(--border);
-      border: 2px solid var(--border);
-      flex-shrink: 0;
-      z-index: 1;
-      margin-top: 1px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px;
-    }
-    .ms-item.done .ms-dot {
-      background: var(--orange);
+    .sn-node.here {
       border-color: var(--orange);
+      background: rgba(252,76,2,0.15);
+      box-shadow: 0 0 0 3px var(--orange-glow);
     }
-    .ms-item.here .ms-dot {
-      background: var(--orange);
-      border-color: var(--orange);
-      box-shadow: 0 0 0 5px var(--orange-glow);
-      width: 22px; height: 22px;
+    .sn-node.future { opacity: 0.32; }
+    .sn-emoji { font-size: 1.35rem; line-height: 1.3; }
+    .sn-name { font-size: 0.7rem; font-weight: 700; margin-top: 4px; line-height: 1.2; }
+    .sn-km { font-size: 0.6rem; color: var(--muted); margin-top: 2px; }
+    .sn-turn {
+      height: 22px;
+      border-bottom: 2px solid var(--border);
     }
-    .ms-item.future { opacity: 0.38; }
-    .ms-label { font-weight: 600; font-size: 0.88rem; }
-    .ms-sub { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+    .sn-turn.right {
+      margin-left: 75%;
+      border-right: 2px solid var(--border);
+      border-radius: 0 0 10px 0;
+    }
+    .sn-turn.left {
+      margin-right: 75%;
+      border-left: 2px solid var(--border);
+      border-radius: 0 0 0 10px;
+    }
+    .sn-turn.done { border-color: var(--orange); }
+    @media (max-width: 600px) {
+      .snake-row { grid-template-columns: repeat(2, 1fr); }
+      .sn-turn.right { margin-left: 50%; }
+      .sn-turn.left { margin-right: 50%; }
+    }
 
     /* ── WEEKLY PACE ── */
     .pace-grid {
@@ -436,6 +435,12 @@
       </div>
     </div>
 
+    <!-- Weekly pace (group only) -->
+    <div class="card" id="pace-card">
+      <div class="card-title">Weekly Pace vs Target (per athlete)</div>
+      <div class="pace-grid" id="pace-grid"></div>
+    </div>
+
     <!-- Virtual location -->
     <div class="card" id="tracker-card">
       <div class="card-title">Virtual Location Tracker — North Pole → Equator</div>
@@ -459,12 +464,6 @@
         </div>
       </div>
       <div class="milestones" id="milestones"></div>
-    </div>
-
-    <!-- Weekly pace (group only) -->
-    <div class="card" id="pace-card">
-      <div class="card-title">Weekly Pace vs Target (per athlete)</div>
-      <div class="pace-grid" id="pace-grid"></div>
     </div>
 
   </div>
@@ -545,8 +544,8 @@ const getMonday = d => {
 
 const totalKm = acts => acts.reduce((s,a) => s + a.distance, 0);
 
-const fmtKm = km => km >= 1000 ? (km/1000).toFixed(2)+'k' : km.toFixed(1);
-const fmtKmFull = km => km.toFixed(1)+' km';
+const fmtKm = km => km.toLocaleString('en-GB', { maximumFractionDigits: 1 });
+const fmtKmFull = km => km.toLocaleString('en-GB', { maximumFractionDigits: 1 }) + ' km';
 
 const linearTarget = (date, tgt) => {
   const elapsed = date - YEAR_START;
@@ -892,19 +891,36 @@ function renderTracker() {
     ? `${(next.km - total).toFixed(0)} km to ${next.emoji} ${next.name}`
     : 'Challenge complete! 🎉';
 
-  document.getElementById('milestones').innerHTML = MILESTONES.map((m, i) => {
-    const passed  = m.km <= total;
-    const isHere  = passed && (!MILESTONES[i+1] || MILESTONES[i+1].km > total);
-    const cls = isHere ? 'ms-item here done' : passed ? 'ms-item done' : 'ms-item future';
-    return `
-      <div class="${cls}">
-        <div class="ms-dot"></div>
-        <div>
-          <div class="ms-label">${m.emoji} ${m.name}</div>
-          <div class="ms-sub">${m.km.toLocaleString()} km · ${m.desc}</div>
-        </div>
+  // Build snake grid — 4 columns, odd rows rendered in reverse DOM order
+  const COLS = 4;
+  let html = '';
+  for (let i = 0; i < MILESTONES.length; i += COLS) {
+    const chunk    = MILESTONES.slice(i, i + COLS);
+    const rowIdx   = Math.floor(i / COLS);
+    const isRTL    = rowIdx % 2 === 1;
+    const display  = isRTL ? [...chunk].reverse() : chunk;
+    const lastRow  = i + COLS >= MILESTONES.length;
+
+    html += '<div class="snake-row">';
+    display.forEach((m, j) => {
+      const origIdx = isRTL ? (i + chunk.length - 1 - j) : (i + j);
+      const passed  = m.km <= total;
+      const isHere  = origIdx === currentIdx;
+      const cls     = isHere ? 'sn-node here' : passed ? 'sn-node done' : 'sn-node future';
+      html += `<div class="${cls}" title="${m.desc}">
+        <div class="sn-emoji">${m.emoji}</div>
+        <div class="sn-name">${m.name}</div>
+        <div class="sn-km">${m.km === 0 ? 'Start' : m.km.toLocaleString() + ' km'}</div>
       </div>`;
-  }).join('');
+    });
+    html += '</div>';
+
+    if (!lastRow) {
+      const turnDone = (MILESTONES[i + COLS]?.km ?? Infinity) <= total;
+      html += `<div class="sn-turn ${isRTL ? 'left' : 'right'} ${turnDone ? 'done' : ''}"></div>`;
+    }
+  }
+  document.getElementById('milestones').innerHTML = html;
 }
 
 // ─────────────────────────────────────────
