@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2026 Running Challenge</title>
+  <title>10,130km Challenge (2026)</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
     :root {
@@ -371,7 +371,7 @@
     <div class="hdr-left">
       <div class="hdr-icon">🏃</div>
       <div>
-        <h1>2026 <span>Running Challenge</span></h1>
+        <h1>10,130km <span>Challenge (2026)</span></h1>
         <div class="hdr-sub" id="hdr-sub">Loading...</div>
       </div>
     </div>
@@ -878,11 +878,12 @@ function renderTracker() {
   document.getElementById('tracker-fill').style.width = `${pct}%`;
   document.getElementById('tracker-pct').textContent = `${fmtKmFull(total)} — ${pct.toFixed(1)}% of ${GROUP_TGT.toLocaleString()} km`;
 
-  let current = MILESTONES[0], next = MILESTONES[1];
+  let current = MILESTONES[0], next = MILESTONES[1], currentIdx = 0;
   for (let i = 0; i < MILESTONES.length; i++) {
     if (MILESTONES[i].km <= total) {
       current = MILESTONES[i];
       next = MILESTONES[i+1] || null;
+      currentIdx = i;
     }
   }
 
