@@ -262,7 +262,6 @@
     .milestones { margin-top: 8px; }
     .snake-row {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
     .sn-node {
@@ -300,11 +299,6 @@
       border-radius: 0 0 0 10px;
     }
     .sn-turn.done { border-color: var(--orange); }
-    @media (max-width: 600px) {
-      .snake-row { grid-template-columns: repeat(2, 1fr); }
-      .sn-turn.right { margin-left: 50%; }
-      .sn-turn.left { margin-right: 50%; }
-    }
 
     /* ── WEEKLY PACE ── */
     .pace-grid {
@@ -892,17 +886,20 @@ function renderTracker() {
     ? `${(next.km - total).toFixed(0)} km to ${next.emoji} ${next.name}`
     : 'Challenge complete! 🎉';
 
-  // Build snake grid — 4 columns, odd rows rendered in reverse DOM order
-  const COLS = 4;
+  // JS drives column count so chunk size and CSS always agree
+  const COLS      = window.innerWidth < 640 ? 2 : 4;
+  const turnEdge  = `${((COLS - 1) / COLS) * 100}%`; // 75% for 4-col, 50% for 2-col
+  const colStyle  = `grid-template-columns: repeat(${COLS}, 1fr)`;
+
   let html = '';
   for (let i = 0; i < MILESTONES.length; i += COLS) {
-    const chunk    = MILESTONES.slice(i, i + COLS);
-    const rowIdx   = Math.floor(i / COLS);
-    const isRTL    = rowIdx % 2 === 1;
-    const display  = isRTL ? [...chunk].reverse() : chunk;
-    const lastRow  = i + COLS >= MILESTONES.length;
+    const chunk   = MILESTONES.slice(i, i + COLS);
+    const rowIdx  = Math.floor(i / COLS);
+    const isRTL   = rowIdx % 2 === 1;
+    const display = isRTL ? [...chunk].reverse() : chunk;
+    const lastRow = i + COLS >= MILESTONES.length;
 
-    html += '<div class="snake-row">';
+    html += `<div class="snake-row" style="${colStyle}">`;
     display.forEach((m, j) => {
       const origIdx = isRTL ? (i + chunk.length - 1 - j) : (i + j);
       const passed  = m.km <= total;
@@ -918,7 +915,9 @@ function renderTracker() {
 
     if (!lastRow) {
       const turnDone = (MILESTONES[i + COLS]?.km ?? Infinity) <= total;
-      html += `<div class="sn-turn ${isRTL ? 'left' : 'right'} ${turnDone ? 'done' : ''}"></div>`;
+      const side     = isRTL ? 'left' : 'right';
+      const margin   = isRTL ? `margin-right:${turnEdge}` : `margin-left:${turnEdge}`;
+      html += `<div class="sn-turn ${side} ${turnDone ? 'done' : ''}" style="${margin}"></div>`;
     }
   }
   document.getElementById('milestones').innerHTML = html;
