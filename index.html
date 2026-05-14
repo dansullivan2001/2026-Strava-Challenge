@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 Running Challenge</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --orange: #FC4C02;
+      --orange-glow: rgba(252,76,2,0.25);
+      --bg: #111;
+      --bg-card: #1c1c1c;
+      --bg-card-2: #222;
+      --text: #f0f0f0;
+      --muted: #888;
+      --border: #2e2e2e;
+      --green: #1db954;
+      --red: #e8394f;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      line-height: 1.4;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #161616 0%, #1f1008 100%);
+      border-bottom: 2px solid var(--orange);
+      padding: 18px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(6px);
+    }
+    .hdr {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .hdr-left { display: flex; align-items: center; gap: 14px; }
+    .hdr-icon {
+      width: 44px; height: 44px;
+      background: var(--orange);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    h1 { font-size: 1.35rem; font-weight: 700; }
+    h1 span { color: var(--orange); }
+    .hdr-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .hdr-right { text-align: right; }
+    .hdr-total { font-size: 1.6rem; font-weight: 800; color: var(--orange); }
+    .hdr-label { font-size: 0.72rem; color: var(--muted); }
+
+    /* ── LAYOUT ── */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
+    }
+
+    /* ── FILTER ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .fbtn {
+      padding: 7px 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--muted);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.83rem;
+      font-family: var(--font);
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .fbtn:hover { border-color: var(--orange); color: var(--text); }
+    .fbtn.active {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* ── STATS GRID ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--orange);
+      border-radius: 12px 12px 0 0;
+    }
+    .stat-lbl {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+    }
+    .stat-val {
+      font-size: 1.95rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text);
+    }
+    .stat-val.up { color: var(--green); }
+    .stat-val.dn { color: var(--red); }
+    .stat-hint { font-size: 0.77rem; color: var(--muted); margin-top: 6px; }
+
+    /* ── SECTION CARD ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-title::before {
+      content: '';
+      width: 4px; height: 18px;
+      background: var(--orange);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── CHART ── */
+    .chart-wrap { position: relative; height: 290px; }
+
+    /* ── LEADERBOARD ── */
+    .lb {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .lb th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+    .lb td {
+      padding: 11px 12px;
+      border-bottom: 1px solid #1e1e1e;
+      font-size: 0.88rem;
+      vertical-align: middle;
+    }
+    .lb tr:last-child td { border-bottom: none; }
+    .lb tr:hover td { background: rgba(255,255,255,0.03); }
+    .rank-chip {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--border);
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.82rem;
+    }
+    .rank-1 { background: #FFD700; color: #000; }
+    .rank-2 { background: #C0C0C0; color: #000; }
+    .rank-3 { background: #CD7F32; color: #fff; }
+    .ath-name { font-weight: 600; }
+    .dist-bar {
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+    .dist-bar-fill {
+      height: 100%;
+      background: var(--orange);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .vs-target { font-weight: 600; }
+
+    /* ── LOCATION TRACKER ── */
+    .tracker-header {
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tracker-current {
+      background: rgba(252,76,2,0.12);
+      border: 1px solid var(--orange);
+      border-radius: 10px;
+      padding: 14px 18px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .tc-lbl { font-size: 0.65rem; color: var(--orange); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+    .tc-name { font-size: 1.15rem; font-weight: 700; }
+    .tc-next { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+    .tracker-bar-wrap { flex: 2; min-width: 200px; display: flex; flex-direction: column; justify-content: center; }
+    .tracker-bar-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); margin-bottom: 6px; }
+    .tracker-bar {
+      height: 18px;
+      background: var(--border);
+      border-radius: 9px;
+      overflow: visible;
+      position: relative;
+    }
+    .tracker-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #e04402, #FC4C02, #ff8c42);
+      border-radius: 9px;
+      transition: width 0.6s ease;
+      position: relative;
+    }
+    .tracker-runner {
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      filter: drop-shadow(0 0 4px var(--orange));
+    }
+    .tracker-pct { font-size: 0.75rem; color: var(--muted); text-align: right; margin-top: 5px; }
+    .milestones {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding-left: 8px;
+    }
+    .ms-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      position: relative;
+      padding: 7px 0;
+    }
+    .ms-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 20px;
+      bottom: -7px;
+      width: 2px;
+      background: var(--border);
+      z-index: 0;
+    }
+    .ms-item.done:not(:last-child)::before { background: var(--orange); }
+    .ms-dot {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--border);
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      z-index: 1;
+      margin-top: 1px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+    }
+    .ms-item.done .ms-dot {
+      background: var(--orange);
+      border-color: var(--orange);
+    }
+    .ms-item.here .ms-dot {
+      background: var(--orange);
+      border-color: var(--orange);
+      box-shadow: 0 0 0 5px var(--orange-glow);
+      width: 22px; height: 22px;
+    }
+    .ms-item.future { opacity: 0.38; }
+    .ms-label { font-weight: 600; font-size: 0.88rem; }
+    .ms-sub { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+
+    /* ── WEEKLY PACE ── */
+    .pace-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+    }
+    .pace-card {
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .pace-ath { font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; }
+    .pace-row { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+    .pace-row b { color: var(--text); }
+    .pace-bar {
+      height: 7px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .pace-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+    /* ── LOADING / ERROR ── */
+    .loading {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+    }
+    .spinner {
+      width: 42px; height: 42px;
+      border: 3px solid var(--border);
+      border-top-color: var(--orange);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .err-box {
+      background: rgba(232,57,79,0.1);
+      border: 1px solid var(--red);
+      border-radius: 10px;
+      padding: 18px;
+      color: var(--red);
+      margin-top: 20px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      main { padding: 16px 14px 40px; }
+      .stat-val { font-size: 1.6rem; }
+      .hdr-total { font-size: 1.3rem; }
+      .lb th:nth-child(4), .lb td:nth-child(4) { display: none; }
+      .tracker-header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon">🏃</div>
+      <div>
+        <h1>2026 <span>Running Challenge</span></h1>
+        <div class="hdr-sub" id="hdr-sub">Loading...</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-total" id="hdr-total">—</div>
+      <div class="hdr-label">of 10,130 km group target</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Loading -->
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Fetching activity data…</p>
+  </div>
+
+  <!-- Error -->
+  <div id="err-box" class="err-box" style="display:none">
+    <strong>Could not load data.</strong> <span id="err-msg"></span>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" style="display:none">
+
+    <!-- Athlete filter -->
+    <div class="filter-bar" id="filter-bar">
+      <button class="fbtn active" data-key="group">Group</button>
+      <button class="fbtn" data-key="Daniel Sullivan">Daniel S.</button>
+      <button class="fbtn" data-key="Ben Toogood">Ben T.</button>
+      <button class="fbtn" data-key="Daniel Gilderthorp">Daniel G.</button>
+      <button class="fbtn" data-key="Stuart Macnaughtan">Stuart M.</button>
+      <button class="fbtn" data-key="Mark Bowden">Mark B.</button>
+    </div>
+
+    <!-- Key stats -->
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- Progress chart -->
+    <div class="card">
+      <div class="card-title" id="chart-title">Group Cumulative Progress</div>
+      <div class="chart-wrap"><canvas id="chart"></canvas></div>
+    </div>
+
+    <!-- Weekly leaderboard -->
+    <div class="card">
+      <div class="card-title" id="lb-title">This Week's Leaderboard</div>
+      <div style="overflow-x:auto">
+        <table class="lb">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Athlete</th>
+              <th>Distance</th>
+              <th>Activities</th>
+              <th>vs Weekly Target</th>
+            </tr>
+          </thead>
+          <tbody id="lb-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Virtual location -->
+    <div class="card" id="tracker-card">
+      <div class="card-title">Virtual Location Tracker — North Pole → Equator</div>
+      <div class="tracker-header">
+        <div class="tracker-current">
+          <div class="tc-lbl">Current Position</div>
+          <div class="tc-name" id="tc-name">—</div>
+          <div class="tc-next" id="tc-next">—</div>
+        </div>
+        <div class="tracker-bar-wrap">
+          <div class="tracker-bar-labels">
+            <span>🧊 North Pole</span>
+            <span>🌍 Equator</span>
+          </div>
+          <div class="tracker-bar">
+            <div class="tracker-bar-fill" id="tracker-fill" style="width:0%">
+              <span class="tracker-runner">🏃</span>
+            </div>
+          </div>
+          <div class="tracker-pct" id="tracker-pct"></div>
+        </div>
+      </div>
+      <div class="milestones" id="milestones"></div>
+    </div>
+
+    <!-- Weekly pace (group only) -->
+    <div class="card" id="pace-card">
+      <div class="card-title">Weekly Pace vs Target (per athlete)</div>
+      <div class="pace-grid" id="pace-grid"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ─────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────
+const SHEET_ID   = '1yf69xsGT4tiAzKEsu2oZZ0ayzVjxygFIseEmM8tjkZQ';
+const SHEET_TAB  = 'Activities';
+const API_KEY    = 'AIzaSyAj8S6AmU8B6CK-kohJEO1TN93Fd5hFGLI';
+const GROUP_TGT  = 10130;
+const IND_TGT    = 2026;
+const ATHLETES   = ['Daniel Sullivan','Ben Toogood','Daniel Gilderthorp','Stuart Macnaughtan','Mark Bowden'];
+const EXCL_TYPES = ['walk','hike','walking','hiking'];
+const YEAR       = 2026;
+const YEAR_START = new Date(YEAR, 0, 1);
+const YEAR_END   = new Date(YEAR, 11, 31, 23, 59, 59);
+
+// Milestones: km from North Pole (90°N) southward. 1° lat ≈ 111 km.
+const MILESTONES = [
+  { km: 0,      name: 'North Pole',      emoji: '🧊', desc: '90°N — Start' },
+  { km: 555,    name: 'Arctic Ocean',    emoji: '🌊', desc: '85°N — Pack ice' },
+  { km: 1221,   name: 'Svalbard',        emoji: '🏔️', desc: '79°N — Norway' },
+  { km: 2220,   name: 'Tromsø',          emoji: '🌌', desc: '70°N — Northern Norway' },
+  { km: 3330,   name: 'Oslo',            emoji: '🇳🇴', desc: '60°N — Norway' },
+  { km: 4329,   name: 'London',          emoji: '🏙️', desc: '51°N — United Kingdom' },
+  { km: 4662,   name: 'Paris',           emoji: '🗼', desc: '48°N — France' },
+  { km: 5106,   name: 'Swiss Alps',      emoji: '⛰️', desc: '45°N — Switzerland' },
+  { km: 5439,   name: 'Rome',            emoji: '🏛️', desc: '41°N — Italy' },
+  { km: 5883,   name: 'Athens',          emoji: '🏺', desc: '37°N — Greece' },
+  { km: 6660,   name: 'Cairo',           emoji: '🐪', desc: '30°N — Egypt' },
+  { km: 7215,   name: 'Khartoum',        emoji: '🏜️', desc: '25°N — Sudan' },
+  { km: 8325,   name: 'Sahel',           emoji: '🌵', desc: '15°N — West Africa' },
+  { km: 9435,   name: 'Gulf of Guinea',  emoji: '🌊', desc: '5°N — Atlantic coast' },
+  { km: 9990,   name: 'Equator',         emoji: '🌍', desc: '0° — Target line!' },
+  { km: 10130,  name: 'Challenge Complete!', emoji: '🎉', desc: '10,130 km — Done!' },
+];
+
+const ATH_COLORS = {
+  'Daniel Sullivan':    '#FC4C02',
+  'Ben Toogood':        '#00b4d8',
+  'Daniel Gilderthorp': '#4cc9f0',
+  'Stuart Macnaughtan': '#f72585',
+  'Mark Bowden':        '#a855f7',
+};
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let activities = [];
+let activeFilter = 'group';
+let chart = null;
+
+// ─────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────
+const toLocalDateStr = d => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+};
+
+const parseDate = s => {
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+};
+
+const getMonday = d => {
+  const dt = new Date(d);
+  const day = dt.getDay();
+  dt.setDate(dt.getDate() + (day === 0 ? -6 : 1 - day));
+  dt.setHours(0,0,0,0);
+  return dt;
+};
+
+const totalKm = acts => acts.reduce((s,a) => s + a.distance, 0);
+
+const fmtKm = km => km >= 1000 ? (km/1000).toFixed(2)+'k' : km.toFixed(1);
+const fmtKmFull = km => km.toFixed(1)+' km';
+
+const linearTarget = (date, tgt) => {
+  const elapsed = date - YEAR_START;
+  const total   = YEAR_END - YEAR_START;
+  return Math.max(0, Math.min(tgt, (elapsed / total) * tgt));
+};
+
+const isEligible = a => !EXCL_TYPES.includes((a.type||'').toLowerCase());
+
+const shortName = name => {
+  const parts = name.split(' ');
+  return parts[0] + (parts[1] ? ' ' + parts[1][0] + '.' : '');
+};
+
+// ─────────────────────────────────────────
+// FETCH  (public CSV export — no API key needed)
+// ─────────────────────────────────────────
+function parseCSV(text) {
+  // Split into lines, respecting quoted newlines
+  const rows = [];
+  let cur = [], field = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (inQ && text[i+1] === '"') { field += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) {
+      cur.push(field); field = '';
+    } else if ((ch === '\n' || ch === '\r') && !inQ) {
+      if (ch === '\r' && text[i+1] === '\n') i++;
+      cur.push(field); field = '';
+      if (cur.some(f => f !== '')) rows.push(cur);
+      cur = [];
+    } else {
+      field += ch;
+    }
+  }
+  if (field || cur.length) { cur.push(field); if (cur.some(f => f !== '')) rows.push(cur); }
+  return rows;
+}
+
+async function fetchSheet() {
+  // Uses Google's public gviz CSV export — works on any view-only sheet, no API key required
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_TAB)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Could not reach Google Sheets (HTTP ${res.status}). Make sure the sheet is shared as "Anyone with the link can view".`);
+  const text = await res.text();
+  const rows = parseCSV(text);
+  if (rows.length < 2) return [];
+
+  const hdrs = rows[0].map(h => h.toLowerCase());
+  const col = needle => hdrs.findIndex(h => h.includes(needle));
+
+  const iAth  = col('athlete');
+  const iId   = col('activity id');
+  const iName = col('activity name');
+  const iType = col('activity type');
+  const iDist = col('distance');
+  const iDur  = col('duration');
+  const iDate = col('activity date');
+
+  return rows.slice(1)
+    .map(r => ({
+      athlete:  (r[iAth]  || '').trim(),
+      id:       (r[iId]   || '').trim(),
+      name:     (r[iName] || '').trim(),
+      type:     (r[iType] || '').trim(),
+      distance: parseFloat(r[iDist]) || 0,
+      duration: parseFloat(r[iDur])  || 0,
+      date:     (r[iDate] || '').trim(),
+    }))
+    .filter(a => a.athlete && a.date && a.distance > 0);
+}
+
+// ─────────────────────────────────────────
+// FILTER HELPERS
+// ─────────────────────────────────────────
+const filtered = key => {
+  const elig = activities.filter(isEligible);
+  return key === 'group' ? elig : elig.filter(a => a.athlete === key);
+};
+
+const weekActivities = acts => {
+  const mon = getMonday(new Date());
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6); sun.setHours(23,59,59,999);
+  return acts.filter(a => { const d = parseDate(a.date); return d >= mon && d <= sun; });
+};
+
+// ─────────────────────────────────────────
+// RENDER: STATS
+// ─────────────────────────────────────────
+function renderStats(key) {
+  const acts    = filtered(key);
+  const isGroup = key === 'group';
+  const tgt     = isGroup ? GROUP_TGT : IND_TGT;
+  const now     = new Date();
+  const total   = totalKm(acts);
+  const tgtNow  = linearTarget(now, tgt);
+  const diff    = total - tgtNow;
+  const week    = weekActivities(acts);
+  const weekKm  = totalKm(week);
+  const longest = acts.length ? acts.reduce((m,a) => a.distance > m.distance ? a : m, acts[0]) : null;
+  const most    = isGroup ? (() => {
+    const cnt = {}; activities.filter(isEligible).forEach(a => cnt[a.athlete] = (cnt[a.athlete]||0)+1);
+    const e = Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0]; return e || null;
+  })() : null;
+
+  const label = isGroup ? 'Group' : shortName(key)+"'s";
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat">
+      <div class="stat-lbl">${label} Total</div>
+      <div class="stat-val">${fmtKm(total)}</div>
+      <div class="stat-hint">${fmtKmFull(total)} of ${tgt.toLocaleString()} km</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Pace vs Target</div>
+      <div class="stat-val ${diff>=0?'up':'dn'}">${diff>=0?'+':''}${fmtKm(diff)}</div>
+      <div class="stat-hint">Target today: ${fmtKmFull(tgtNow)}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">This Week</div>
+      <div class="stat-val">${fmtKm(weekKm)}</div>
+      <div class="stat-hint">${week.length} activit${week.length===1?'y':'ies'}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Longest Activity</div>
+      <div class="stat-val">${longest ? fmtKm(longest.distance) : '—'}</div>
+      <div class="stat-hint">${longest ? (longest.name||longest.type) : 'No activities'}</div>
+    </div>
+    ${isGroup && most ? `
+    <div class="stat">
+      <div class="stat-lbl">Most Active</div>
+      <div class="stat-val" style="font-size:1.1rem;padding-top:4px">${shortName(most[0])}</div>
+      <div class="stat-hint">${most[1]} activities</div>
+    </div>` : ''}
+  `;
+}
+
+// ─────────────────────────────────────────
+// RENDER: CHART
+// ─────────────────────────────────────────
+const fillBetween = {
+  id: 'fillBetween',
+  beforeDatasetsDraw(ch) {
+    const ctx  = ch.ctx;
+    const m0   = ch.getDatasetMeta(0);
+    const m1   = ch.getDatasetMeta(1);
+    if (!m0.data.length || !m1.data.length) return;
+    const len = Math.min(m0.data.length, m1.data.length);
+    ctx.save();
+    for (let i = 0; i < len - 1; i++) {
+      const x0 = m0.data[i].x,   ya0 = m0.data[i].y,   yt0 = m1.data[i].y;
+      const x1 = m0.data[i+1].x, ya1 = m0.data[i+1].y, yt1 = m1.data[i+1].y;
+      // In pixel space: smaller y = higher value = ahead of target
+      const ahead = (ya0 + ya1) / 2 < (yt0 + yt1) / 2;
+      ctx.beginPath();
+      ctx.moveTo(x0, ya0); ctx.lineTo(x1, ya1);
+      ctx.lineTo(x1, yt1); ctx.lineTo(x0, yt0);
+      ctx.closePath();
+      ctx.fillStyle = ahead ? 'rgba(29,185,84,0.22)' : 'rgba(232,57,79,0.22)';
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+};
+
+function renderChart(key) {
+  const isGroup = key === 'group';
+  const tgt     = isGroup ? GROUP_TGT : IND_TGT;
+  const acts    = filtered(key).sort((a,b) => a.date.localeCompare(b.date));
+  const color   = isGroup ? '#FC4C02' : (ATH_COLORS[key] || '#FC4C02');
+
+  document.getElementById('chart-title').textContent =
+    isGroup ? 'Group Cumulative Progress' : `${key} — Cumulative Progress`;
+
+  // Reset canvas
+  const wrap = document.getElementById('chart').parentElement;
+  wrap.innerHTML = '<canvas id="chart"></canvas>';
+
+  if (!acts.length) {
+    wrap.innerHTML = '<p style="text-align:center;color:#888;padding:40px">No data yet</p>';
+    return;
+  }
+
+  const dailyMap = {};
+  acts.forEach(a => { dailyMap[a.date] = (dailyMap[a.date]||0) + a.distance; });
+
+  const today   = new Date(); today.setHours(23,59,59,999);
+  const labels  = [], actData = [], tgtData = [];
+  let cum = 0;
+  for (let d = new Date(YEAR_START); d <= today; d.setDate(d.getDate()+1)) {
+    const ds = toLocalDateStr(d);
+    cum += dailyMap[ds] || 0;
+    labels.push(ds);
+    actData.push(cum);
+    tgtData.push(linearTarget(new Date(d), tgt));
+  }
+
+  // Display labels: show one per ~2 weeks
+  const dispLabels = labels.map((l, i) => {
+    if (i % 14 !== 0) return '';
+    const d = parseDate(l);
+    return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+  });
+
+  if (chart) { chart.destroy(); chart = null; }
+
+  chart = new Chart(document.getElementById('chart').getContext('2d'), {
+    type: 'line',
+    plugins: [fillBetween],
+    data: {
+      labels: dispLabels,
+      datasets: [
+        {
+          label: isGroup ? 'Group' : key,
+          data: actData,
+          borderColor: color,
+          borderWidth: 2.5,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          tension: 0.25,
+          fill: false,
+          order: 1,
+        },
+        {
+          label: 'Target',
+          data: tgtData,
+          borderColor: 'rgba(255,255,255,0.28)',
+          borderWidth: 1.5,
+          borderDash: [7, 4],
+          pointRadius: 0,
+          tension: 0,
+          fill: false,
+          order: 2,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: {
+          labels: { color:'#bbb', font:{size:12}, boxWidth:20 }
+        },
+        tooltip: {
+          backgroundColor: '#252525',
+          borderColor: '#3a3a3a',
+          borderWidth: 1,
+          titleColor: '#fff',
+          bodyColor: '#ccc',
+          callbacks: {
+            title: items => {
+              const idx = items[0].dataIndex;
+              const d = parseDate(labels[idx]);
+              return d.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+            },
+            label: ctx => `${ctx.dataset.label}: ${ctx.raw.toFixed(1)} km`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color:'rgba(255,255,255,0.04)' },
+          ticks: { color:'#666', maxRotation:0, autoSkip:false },
+        },
+        y: {
+          grid: { color:'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#666',
+            callback: v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v,
+          },
+          min: 0,
+        }
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────
+// RENDER: LEADERBOARD
+// ─────────────────────────────────────────
+function renderLeaderboard(key) {
+  const isGroup = key === 'group';
+  const mon = getMonday(new Date());
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6); sun.setHours(23,59,59,999);
+  const weeklyTgt = IND_TGT / 52;
+  const elig = activities.filter(isEligible);
+
+  const rows = (isGroup ? ATHLETES : [key]).map(ath => {
+    const week = elig.filter(a => {
+      if (a.athlete !== ath) return false;
+      const d = parseDate(a.date); return d >= mon && d <= sun;
+    });
+    return { athlete: ath, km: totalKm(week), count: week.length };
+  }).sort((a,b) => b.km - a.km);
+
+  const maxKm = rows[0]?.km || 1;
+
+  const weekStr = `${mon.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${sun.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`;
+  document.getElementById('lb-title').textContent = `This Week's Leaderboard — ${weekStr}`;
+
+  document.getElementById('lb-body').innerHTML = rows.map((r, i) => {
+    const pct = maxKm > 0 ? (r.km / maxKm * 100) : 0;
+    const vs  = r.km - weeklyTgt;
+    const vc  = vs >= 0 ? '#1db954' : '#e8394f';
+    const rc  = ['rank-1','rank-2','rank-3'][i] || '';
+    return `
+      <tr>
+        <td><span class="rank-chip ${rc}">${i+1}</span></td>
+        <td>
+          <div class="ath-name">${shortName(r.athlete)}</div>
+          <div class="dist-bar"><div class="dist-bar-fill" style="width:${pct}%"></div></div>
+        </td>
+        <td><strong>${r.km.toFixed(1)}</strong> km</td>
+        <td>${r.count}</td>
+        <td class="vs-target" style="color:${vc}">${vs>=0?'+':''}${vs.toFixed(1)} km</td>
+      </tr>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────
+// RENDER: LOCATION TRACKER
+// ─────────────────────────────────────────
+function renderTracker() {
+  const total = totalKm(activities.filter(isEligible));
+  const pct   = Math.min(100, (total / GROUP_TGT) * 100);
+
+  document.getElementById('tracker-fill').style.width = `${pct}%`;
+  document.getElementById('tracker-pct').textContent = `${fmtKmFull(total)} — ${pct.toFixed(1)}% of ${GROUP_TGT.toLocaleString()} km`;
+
+  let current = MILESTONES[0], next = MILESTONES[1];
+  for (let i = 0; i < MILESTONES.length; i++) {
+    if (MILESTONES[i].km <= total) {
+      current = MILESTONES[i];
+      next = MILESTONES[i+1] || null;
+    }
+  }
+
+  document.getElementById('tc-name').textContent = `${current.emoji} ${current.name}`;
+  document.getElementById('tc-next').textContent = next
+    ? `${(next.km - total).toFixed(0)} km to ${next.emoji} ${next.name}`
+    : 'Challenge complete! 🎉';
+
+  document.getElementById('milestones').innerHTML = MILESTONES.map((m, i) => {
+    const passed  = m.km <= total;
+    const isHere  = passed && (!MILESTONES[i+1] || MILESTONES[i+1].km > total);
+    const cls = isHere ? 'ms-item here done' : passed ? 'ms-item done' : 'ms-item future';
+    return `
+      <div class="${cls}">
+        <div class="ms-dot"></div>
+        <div>
+          <div class="ms-label">${m.emoji} ${m.name}</div>
+          <div class="ms-sub">${m.km.toLocaleString()} km · ${m.desc}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────
+// RENDER: WEEKLY PACE
+// ─────────────────────────────────────────
+function renderPace() {
+  const mon = getMonday(new Date());
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6); sun.setHours(23,59,59,999);
+  const elig = activities.filter(isEligible);
+  const weeklyTgt = IND_TGT / 52;
+
+  document.getElementById('pace-grid').innerHTML = ATHLETES.map(ath => {
+    const week = elig.filter(a => {
+      if (a.athlete !== ath) return false;
+      const d = parseDate(a.date); return d >= mon && d <= sun;
+    });
+    const km  = totalKm(week);
+    const pct = Math.min(100, (km / weeklyTgt) * 100);
+    const col = km >= weeklyTgt ? '#1db954' : '#FC4C02';
+    return `
+      <div class="pace-card">
+        <div class="pace-ath">${shortName(ath)}</div>
+        <div class="pace-row"><b>${km.toFixed(1)} km</b><span>/ ${weeklyTgt.toFixed(1)} km</span></div>
+        <div class="pace-bar">
+          <div class="pace-fill" style="width:${pct}%;background:${col}"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────
+// APPLY FILTER
+// ─────────────────────────────────────────
+function applyFilter(key) {
+  activeFilter = key;
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+
+  renderStats(key);
+  renderChart(key);
+  renderLeaderboard(key);
+
+  const isGroup = key === 'group';
+  document.getElementById('pace-card').style.display    = isGroup ? '' : 'none';
+  document.getElementById('tracker-card').style.display = isGroup ? '' : 'none';
+}
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+async function init() {
+  try {
+    activities = await fetchSheet();
+
+    document.getElementById('loading').style.display   = 'none';
+    document.getElementById('dashboard').style.display = '';
+
+    const total = totalKm(activities.filter(isEligible));
+    document.getElementById('hdr-total').textContent = fmtKmFull(total);
+    document.getElementById('hdr-sub').textContent =
+      `Last updated ${new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})} · ${activities.length} activities loaded`;
+
+    renderStats('group');
+    renderChart('group');
+    renderLeaderboard('group');
+    renderTracker();
+    renderPace();
+
+    document.getElementById('filter-bar').addEventListener('click', e => {
+      const btn = e.target.closest('.fbtn');
+      if (btn) applyFilter(btn.dataset.key);
+    });
+
+  } catch (e) {
+    document.getElementById('loading').style.display  = 'none';
+    document.getElementById('err-box').style.display  = '';
+    document.getElementById('err-msg').textContent    = e.message;
+    console.error(e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
