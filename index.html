@@ -473,7 +473,7 @@ const GROUP_TGT  = 10130;
 const IND_TGT    = 2026;
 const ATHLETES   = ['Daniel Sullivan','Ben Toogood','Daniel Gilderthorp','Stuart Macnaughtan','Mark Bowden'];
 const EXCL_TYPES = ['walk','hike','walking','hiking'];
-const YEAR       = 2026;
+const YEAR       = new Date().getFullYear();
 const YEAR_START = new Date(YEAR, 0, 1);
 const YEAR_END   = new Date(YEAR, 11, 31, 23, 59, 59);
 
@@ -546,7 +546,12 @@ const linearTarget = (date, tgt) => {
   return Math.max(0, Math.min(tgt, (elapsed / total) * tgt));
 };
 
-const isEligible = a => !EXCL_TYPES.includes((a.type||'').toLowerCase());
+const inYear = a => {
+  const d = parseDate(a.date);
+  return d >= YEAR_START && d <= YEAR_END;
+};
+
+const isEligible = a => !EXCL_TYPES.includes((a.type||'').toLowerCase()) && inYear(a);
 
 const shortName = name => {
   const parts = name.split(' ');
