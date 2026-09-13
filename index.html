@@ -976,10 +976,11 @@ async function init() {
     document.getElementById('loading').style.display   = 'none';
     document.getElementById('dashboard').style.display = '';
 
-    const total = totalKm(activities.filter(isEligible));
+    const elig  = activities.filter(isEligible);
+    const total = totalKm(elig);
     document.getElementById('hdr-total').textContent = fmtKmFull(total);
     document.getElementById('hdr-sub').textContent =
-      `Last updated ${new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})} · ${activities.length} activities loaded`;
+      `Last updated ${new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})} · ${elig.length} activit${elig.length===1?'y':'ies'} counted`;
 
     renderStats('group');
     renderChart('group');
