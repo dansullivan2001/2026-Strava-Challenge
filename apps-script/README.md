@@ -26,7 +26,7 @@ Private data (Strava tokens, emails, secrets, celebration flags) is in **Script 
    | `INVITE_KEY` | a long random string (anyone with the invite link has it) |
 
 5. **Deploy**: *Deploy → New deployment → Web app*, execute as **Me**, access **Anyone**. Copy the `/exec` URL.
-6. **Vercel (RunCoach project)**: add the route from `vercel/` (pick the variant for your framework), set env var `CHALLENGE_APPS_SCRIPT_URL` to the `/exec` URL, redeploy. **Do not change the Strava callback domain** (`stride-pink.vercel.app` stays).
+6. **Vercel (RunCoach project)**: add the route from `vercel/` (pick the variant for your framework), set env var `CHALLENGE_APPS_SCRIPT_URL` to the `/exec` URL, redeploy. **Do not change the Strava callback domain** (`stride-pink.vercel.app` stays). Also paste `vercel/RUNCOACH-CLAUDE-MD-SNIPPET.md` into the RunCoach repo's `CLAUDE.md`, so Claude Code there knows why the route exists and what must not change.
 7. **Run `setup()`** once from the editor (grants permissions, creates the sheets and triggers, logs the invite link).
 8. **Test**: use the invite link yourself, then run `syncActivities` and `sendWeeklyEmailTestToMe` (emails only you, records nothing).
 9. Send the invite link to friends.
