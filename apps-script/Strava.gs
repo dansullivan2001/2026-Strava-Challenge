@@ -29,7 +29,12 @@ function stravaTokenRequest_(extra) {
 }
 
 function exchangeCode_(code) {
-  return stravaTokenRequest_({ grant_type: 'authorization_code', code: code });
+  // redirect_uri must match the one used in the authorise request (standard OAuth; harmless if Strava ignores it).
+  return stravaTokenRequest_({
+    grant_type: 'authorization_code',
+    code: code,
+    redirect_uri: requireProp_('STRAVA_REDIRECT_URI'),
+  });
 }
 
 /** Returns a fresh access token and stores the refresh token if Strava rotated it. */
