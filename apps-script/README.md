@@ -37,6 +37,7 @@ Disable the Pipedream workflows **before** `setup()` creates the triggers. Both 
 
 ## Things to know
 
+- **Scope**: `activity:read` (public activities). Strava's docs, as I recall them, say this also covers "Followers"-visibility activities and excludes only "Only You"; that is not verified. Activities set to "Only You" are never read.
 - **Year**: `Config.gs` defaults to 2027. Set `YEAR = 2026` if you cut over before the 2026 challenge ends.
 - **Group target** counts every registered athlete, so a late joiner raises it. A celebration already sent is not repeated.
 - **Route**: landmarks are defined for 10,130 km and scaled so the finish line equals the group target.
@@ -50,7 +51,6 @@ Disable the Pipedream workflows **before** `setup()` creates the triggers. Both 
 - Strava accepting a different path on `stride-pink.vercel.app` as the `redirect_uri` (it should only check the domain).
 - The invite form's redirect to Strava from inside the Apps Script page (a "Continue to Strava" link is shown as a fallback).
 - Trigger timing: `atHour(21)` fires at some point within that hour.
-- Your Strava app's athlete limit allows more than 5.
 
 ## Tests
 

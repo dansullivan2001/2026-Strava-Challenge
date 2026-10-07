@@ -39,7 +39,7 @@ function inviteForm_(p) {
   const body =
     '<h1>Join the ' + esc_(CONFIG.CHALLENGE_NAME) + '</h1>' +
     '<p>Connect your Strava account so your runs and rides count towards the group target, ' +
-    'and get the weekly summary email.</p>' +
+    'and get the weekly summary email. Only your public activities are read.</p>' +
     '<form id="f">' +
     '<label for="n">Your name (as shown on the dashboard)</label><input id="n" maxlength="60" required>' +
     '<label for="e">Email for the weekly summary</label><input id="e" type="email" maxlength="120" required>' +

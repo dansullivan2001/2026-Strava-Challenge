@@ -21,8 +21,8 @@ const CONFIG = {
   ACTIVITIES_SHEET: 'Activities',
   CHALLENGE_SHEET: 'Challenge',
 
-  // 'activity:read' = public/followers activities; 'activity:read_all' also includes private ones.
-  STRAVA_SCOPE: 'activity:read_all',
+  // 'activity:read' excludes activities set to "Only You"; 'activity:read_all' would include them.
+  STRAVA_SCOPE: 'activity:read',
 
   // Daily sync looks back this far (the invite backfill goes back to 1 January).
   SYNC_WINDOW_DAYS: 30,
