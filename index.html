@@ -472,7 +472,20 @@ const SHEET_TAB  = 'Activities';
 const GROUP_TGT  = 10130;
 const IND_TGT    = 2026;
 const ATHLETES   = ['Daniel Sullivan','Ben Toogood','Daniel Gilderthorp','Stuart Macnaughtan','Mark Bowden'];
-const EXCL_TYPES = ['walk','hike','walking','hiking'];
+// Allowlist of activity types that count. Mirrors the Strava challenge's qualifying list;
+// anything not listed (e.g. Walk, Hike, WeightTraining) is ignored.
+// Sheet type names are the Strava API sport types, compared case-insensitively.
+const INCL_TYPES = [
+  // Strava's qualifying list
+  'alpineski','backcountryski','canoeing','crossfit','ebikeride','elliptical','soccer','golf',
+  'handcycle','iceskate','inlineskate','kayaking','kitesurf','nordicski','ride','rollerski',
+  'rowing','run','sail','skateboard','snowboard','snowshoe','standuppaddling','surfing','swim',
+  'velomobile','virtualride','virtualrun','wheelchair','windsurf','workout',
+  // Strava sub-types that count under their parent type
+  'trailrun','mountainbikeride','gravelride','emountainbikeride',
+  // Deliberately kept even though not on Strava's list (group decision)
+  'padel','tennis',
+];
 const YEAR       = new Date().getFullYear();
 const YEAR_START = new Date(YEAR, 0, 1);
 const YEAR_END   = new Date(YEAR, 11, 31, 23, 59, 59);
@@ -551,7 +564,7 @@ const inYear = a => {
   return d >= YEAR_START && d <= YEAR_END;
 };
 
-const isEligible = a => !EXCL_TYPES.includes((a.type||'').toLowerCase()) && inYear(a);
+const isEligible = a => INCL_TYPES.includes((a.type||'').toLowerCase()) && inYear(a);
 
 const shortName = name => {
   const parts = name.split(' ');
