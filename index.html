@@ -605,7 +605,18 @@ async function fetchSheet() {
   const iDur  = col('duration');
   const iDate = col('activity date');
 
+  // Drop repeated rows: the sheet can contain the same Activity ID more than once
+  const seen = new Set();
+  const isFirst = r => {
+    const id = (r[iId] || '').trim();
+    if (!id) return true;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  };
+
   return rows.slice(1)
+    .filter(isFirst)
     .map(r => ({
       athlete:  (r[iAth]  || '').trim(),
       id:       (r[iId]   || '').trim(),
