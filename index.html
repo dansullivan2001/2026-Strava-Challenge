@@ -709,6 +709,12 @@ function renderStats(key) {
       <div class="stat-val" style="font-size:1.1rem;padding-top:4px">${shortName(most[0])}</div>
       <div class="stat-hint">${most[1]} activities</div>
     </div>` : ''}
+    ${!isGroup ? `
+    <div class="stat">
+      <div class="stat-lbl">Total Activities</div>
+      <div class="stat-val">${acts.length.toLocaleString('en-GB')}</div>
+      <div class="stat-hint">${acts.length===1?'activity':'activities'} counted</div>
+    </div>` : ''}
   `;
 }
 
