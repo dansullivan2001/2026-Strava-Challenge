@@ -767,12 +767,8 @@ function renderChart(key) {
     tgtData.push(linearTarget(new Date(d), tgt));
   }
 
-  // Display labels: show one per ~2 weeks
-  const dispLabels = labels.map((l, i) => {
-    if (i % 14 !== 0) return '';
-    const d = parseDate(l);
-    return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
-  });
+  // Display labels: first day of each month only (every 2nd month on narrow screens)
+  const dispLabels = labels;
 
   if (chart) { chart.destroy(); chart = null; }
 
@@ -833,15 +829,25 @@ function renderChart(key) {
       scales: {
         x: {
           grid: { color:'rgba(255,255,255,0.04)' },
-          ticks: { color:'#666', maxRotation:0, autoSkip:false },
+          ticks: {
+            color:'#666', maxRotation:0, autoSkip:false,
+            callback: function(val, idx) {
+              const d = parseDate(labels[idx]);
+              if (!d || d.getDate() !== 1) return '';
+              const narrow = this.chart.width < 500;
+              if (narrow && d.getMonth() % 2 !== 0) return '';
+              return d.toLocaleDateString('en-GB', { month:'short' });
+            },
+          },
         },
         y: {
           grid: { color:'rgba(255,255,255,0.04)' },
           ticks: {
             color: '#666',
-            callback: v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v,
+            maxTicksLimit: 7,
+            callback: v => v.toLocaleString('en-GB'),
           },
-          min: 0,
+          beginAtZero: true,
         }
       }
     }
