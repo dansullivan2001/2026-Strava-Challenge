@@ -684,6 +684,11 @@ function renderStats(key) {
       <div class="stat-hint">${fmtKmFull(total)} of ${tgt.toLocaleString()} km</div>
     </div>
     <div class="stat">
+      <div class="stat-lbl">To Go</div>
+      <div class="stat-val">${total >= tgt ? 'Done' : fmtKm(tgt - total)}</div>
+      <div class="stat-hint">${total >= tgt ? `Target of ${tgt.toLocaleString()} km reached` : `${fmtKmFull(tgt - total)} to ${tgt.toLocaleString()} km`}</div>
+    </div>
+    <div class="stat">
       <div class="stat-lbl">Pace vs Target</div>
       <div class="stat-val ${diff>=0?'up':'dn'}">${diff>=0?'+':''}${fmtKm(diff)}</div>
       <div class="stat-hint">Target today: ${fmtKmFull(tgtNow)}</div>
